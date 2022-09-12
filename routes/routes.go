@@ -8,6 +8,7 @@ import (
 )
 
 func Routes(router *gin.Engine) {
+	router.POST("/user/login/externalapi", handlers.ExternalApiHandler)
 	router.POST("/user", handlers.InsertUserHandler)
 	router.GET("/user/:id", controllers.GetUser)
 	router.PUT("/user/delete/:id", handlers.DeleteUserHandler)

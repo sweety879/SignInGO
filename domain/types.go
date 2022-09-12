@@ -17,3 +17,8 @@ type EditUserType struct {
 	OldPassword string `json:"oldpassword" binding:"required"`
 	NewPassword string `json:"newpassword"  binding:"required"`
 }
+
+type ExternalAPILogin struct {
+	UserName string `json:"username"    binding:"required"`
+	Password string `json:"password"    binding:"required"`
+}
