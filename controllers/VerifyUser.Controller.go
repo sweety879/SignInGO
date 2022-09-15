@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/base64"
+	"fmt"
 	helpers "go-psql-gin/helpers"
 	"log"
 	"net/http"
@@ -25,13 +26,16 @@ func VerifyUser(c *gin.Context) {
 	if err != nil || value == nil {
 
 		psql := sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
-		query := psql.Select("password").From("users").Where(`email = ?`, email).Where("active = ? ", true)
+		query := psql.Select("info->>'password' as jpassword").From("users").Where(`info ->>'email' = ?`, email).Where("active = ? ", true)
+		// query := psql.Select("password").From("users").Where(`email = ?`, email).Where("active = ? ", true)
 		sql, args, err := query.ToSql()
 		if err != nil {
 			log.Println(err)
 			return
 		}
 
+		fmt.Println(sql)
+		fmt.Println(args)
 		rows, err := dbConnect.Query(sql, args...)
 		if err != nil {
 			log.Printf(" error occured during insertion %v", err)
@@ -49,8 +53,11 @@ func VerifyUser(c *gin.Context) {
 			}
 		}
 	} else {
+		fmt.Println("--------------------------------------------")
 		encrypted_password = string(value)
 	}
+
+	fmt.Println(encrypted_password)
 
 	decrypt_password, _ := base64.StdEncoding.DecodeString(encrypted_password)
 	if password == string(decrypt_password) {

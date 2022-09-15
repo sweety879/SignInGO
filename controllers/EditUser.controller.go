@@ -2,11 +2,12 @@ package controllers
 
 import (
 	"encoding/base64"
+	"encoding/json"
+
+	"go-psql-gin/domain"
 	helpers "go-psql-gin/helpers"
 	"log"
 	"net/http"
-
-	domain "go-psql-gin/domain"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/gin-gonic/gin"
@@ -18,9 +19,21 @@ func EditUser(user domain.EditUserType, c *gin.Context) {
 
 	password := base64.StdEncoding.EncodeToString([]byte(oldData.NewPassword))
 	oldData.OldPassword = base64.StdEncoding.EncodeToString([]byte(oldData.OldPassword))
+
+	var newData domain.Insertuser
+	newData.Email = oldData.Email
+	newData.Password = password
+
+	jsonReq, jsonErr := json.Marshal(newData)
+	if jsonErr != nil {
+		log.Fatalln(jsonErr)
+		return
+	}
+
 	psql := sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
-	query := psql.Update("users").Set("password", password).Where("id = ? and email =? and password = ? and active = ?", userId, oldData.Email, oldData.OldPassword, true)
+	query := psql.Update("users").Set("password", password).Set("info", string(jsonReq)).Where("id = ? and email =? and password = ? and active = ?", userId, oldData.Email, oldData.OldPassword, true)
 	sql, args, err := query.ToSql()
+
 	if err != nil {
 		log.Println(err)
 		return
@@ -54,7 +67,7 @@ func EditUser(user domain.EditUserType, c *gin.Context) {
 
 				c.JSON(http.StatusOK, gin.H{
 					"status":  200,
-					"message": "Invalid Credentials or account has beedn deleted",
+					"message": "Invalid Credentials or account has been deleted",
 				})
 			}
 
